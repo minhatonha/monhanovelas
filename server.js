@@ -46,6 +46,8 @@ app.use((req, res) => {
       'via',
       'connect-time',
       'total-route-time',
+      'referer',
+      'origin',
       // Other Heroku added debug headers
       // 'x-forwarded-for',
       // 'x-forwarded-proto',
