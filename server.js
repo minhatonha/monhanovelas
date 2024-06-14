@@ -23,13 +23,6 @@ const checkRateLimit = require('./lib/rate-limit')(process.env.CORSANYWHERE_RATE
 
 const app = express();
 
-// Middleware to set the Referer and Origin headers
-app.use((req, res, next) => {
-  req.headers['referer'] = 'https://www.starplus.com/';
-  req.headers['origin'] = 'https://www.starplus.com/';
-  next();
-});
-
 // Create the CORS Anywhere proxy server
 app.use((req, res) => {
   corsAnywhere.createServer({
@@ -71,3 +64,28 @@ function parseEnvList(env) {
   }
   return env.split(',');
 }
+
+// Client-side JavaScript to be injected into the served pages
+const clientSideScript = `
+(function() {
+    var cors_api_host = 'cors-anywhere.herokuapp.com';
+    var cors_api_url = 'https://' + cors_api_host + '/';
+    var slice = [].slice;
+    var origin = window.location.protocol + '//' + window.location.host;
+    var open = XMLHttpRequest.prototype.open;
+    XMLHttpRequest.prototype.open = function() {
+        var args = slice.call(arguments);
+        var targetOrigin = /^https?:\/\/([^\/]+)/i.exec(args[1]);
+        if (targetOrigin && targetOrigin[0].toLowerCase() !== origin &&
+            targetOrigin[1] !== cors_api_host) {
+            args[1] = cors_api_url + args[1];
+        }
+        return open.apply(this, args);
+    };
+})();
+`;
+
+// Serve the client-side script at a specific endpoint
+app.get('/client-side-script.js', (req, res) => {
+  res.type('application/javascript').send(clientSideScript);
+});
