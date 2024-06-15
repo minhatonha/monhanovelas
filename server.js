@@ -1,85 +1,31 @@
 require('dotenv').config();
-const XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
+const express = require('express');
+const cors = require('cors');
+const app = express();
 
-(function() {
-    var cors_api_host = 'cors-anywhere.herokuapp.com';
-    var cors_api_url = 'https://' + cors_api_host + '/';
-    var slice = [].slice;
-    var origin = 'https://playervipmaster.com'; // Substitua pelo seu domínio
-    var open = XMLHttpRequest.prototype.open;
-    XMLHttpRequest.prototype.open = function() {
-        var args = slice.call(arguments);
-        var targetOrigin = /^https?:\/\/([^\/]+)/i.exec(args[1]);
-        if (targetOrigin && targetOrigin[0].toLowerCase() !== origin &&
-            targetOrigin[1] !== cors_api_host) {
-            args[1] = cors_api_url + args[1];
+// Obter a lista de permissões do arquivo .env
+const whitelist = process.env.CORS_WHITELIST.split(',');
+
+const corsOptions = {
+    origin: function (origin, callback) {
+        if (!origin || whitelist.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
         }
-        open.apply(this, args);
-
-        // Adiciona os cabeçalhos obrigatórios após a chamada ao método open
-        this.setRequestHeader('origin', origin);
-        this.setRequestHeader('x-requested-with', 'XMLHttpRequest');
-    };
-
-    // Configuração do servidor CORS Anywhere
-    var host = process.env.HOST || '0.0.0.0';
-    var port = process.env.PORT || 8080;
-    var originBlacklist = parseEnvList(process.env.CORSANYWHERE_BLACKLIST);
-    var originWhitelist = parseEnvList(process.env.CORSANYWHERE_WHITELIST);
-    var refererWhitelist = parseEnvList(process.env.CORSANYWHERE_REFERERWHITELIST); // Lista de permissões de referer
-
-    function parseEnvList(env) {
-        if (!env) {
-            return [];
-        }
-        return env.split(',');
     }
+};
 
-    var checkRateLimit = require('./lib/rate-limit')(process.env.CORSANYWHERE_RATELIMIT);
+// Usar o middleware CORS
+app.use(cors(corsOptions));
 
-    var cors_proxy = require('./lib/cors-anywhere');
-    cors_proxy.createServer({
-        originBlacklist: originBlacklist,
-        originWhitelist: originWhitelist,
-        requireHeader: ['origin', 'x-requested-with'],
-        checkRateLimit: checkRateLimit,
-        removeHeaders: [
-            'cookie',
-            'cookie2',
-            'origin',
-            'referer',
-            'x-request-start',
-            'x-request-id',
-            'via',
-            'connect-time',
-            'total-route-time',
-        ],
-        redirectSameOrigin: true,
-        httpProxyOptions: {
-            xfwd: false,
-        },
-        handleInitialRequest: function(req, res, location) {
-            var originHeader = req.headers.origin;
-            var refererHeader = req.headers.referer;
+// Exemplo de rota
+app.get('/', (req, res) => {
+    res.send('Hello World!');
+});
 
-            // Verificar se o origin está na whitelist
-            if (originHeader && !originWhitelist.includes(originHeader)) {
-                res.writeHead(403, 'Origin not allowed');
-                res.end('Origin not allowed');
-                return true; // Bloquear a solicitação
-            }
-
-            // Verificar se o referer está na whitelist
-            if (refererHeader && !refererWhitelist.some(whitelisted => refererHeader.startsWith(whitelisted))) {
-                res.writeHead(403, 'Referer not allowed');
-                res.end('Referer not allowed');
-                return true; // Bloquear a solicitação
-            }
-
-            // Permitir a solicitação
-            return false;
-        }
-    }).listen(port, host, function() {
-        console.log('Running CORS Anywhere on ' + host + ':' + port);
-    });
-})();
+// Inicializar o servidor
+const port = process.env.PORT || 8080;
+app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+});
