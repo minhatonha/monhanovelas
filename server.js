@@ -21,6 +21,31 @@ const XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
     // Listen on a specific port via the PORT environment variable
     var port = process.env.PORT || 8080;
 
+    // Middleware para definir os cabeçalhos CORS e verificar origem
+    const allowedOrigins = ['https://playervipmaster.com', 'https://anotherallowed.com']; // Adicione os domínios permitidos aqui
+
+    function setCORSHeaders(req, res, next) {
+        const origin = req.headers.origin;
+        if (allowedOrigins.includes(origin)) {
+            res.header('Access-Control-Allow-Origin', origin);
+            res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+            res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+            next();
+        } else {
+            res.status(403).json({ message: 'Acesso Negado!' });
+        }
+    }
+
+    // Adicionando o middleware de CORS ao seu servidor
+    const express = require('express');
+    const app = express();
+    app.use(setCORSHeaders);
+
+    // Suas outras configurações e rotas aqui
+    app.get('/', (req, res) => {
+        res.send('Hello, World!');
+    });
+    
     // Grab the blacklist from the command-line so that we can update the blacklist without deploying
     // again. CORS Anywhere is open by design, and this blacklist is not used, except for countering
     // immediate abuse (e.g. denial of service). If you want to block all origins except for some,
