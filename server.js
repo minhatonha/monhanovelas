@@ -1,6 +1,4 @@
-const express = require('express');
 const XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
-const app = express();
 
 (function() {
     var cors_api_host = 'cors-anywhere.herokuapp.com';
