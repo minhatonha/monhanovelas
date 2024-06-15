@@ -46,8 +46,7 @@ const XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
       removeHeaders: [
         'cookie',
         'cookie2',
-        'origin',
-        'referer',
+
         // Strip Heroku-specific headers
         'x-request-start',
         'x-request-id',
@@ -64,10 +63,6 @@ const XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
         // Do not add X-Forwarded-For, etc. headers, because Heroku already adds it.
         xfwd: false,
       },
-  setHeaders: {
-    'Access-Control-Allow-Origin': 'https://playervipmaster.com', // Domínio permitido
-    // Adicione outros cabeçalhos necessários aqui
-  }
     }).listen(port, host, function() {
       console.log('Running CORS Anywhere on ' + host + ':' + port);
     });
