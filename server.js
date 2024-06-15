@@ -1,4 +1,6 @@
+const express = require('express');
 const XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
+const app = express();
 
 (function() {
     var cors_api_host = 'cors-anywhere.herokuapp.com';
@@ -15,37 +17,17 @@ const XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
         }
         return open.apply(this, args);
     };
-    
-    // Listen on a specific host via the HOST environment variable
-    var host = process.env.HOST || '0.0.0.0';
-    // Listen on a specific port via the PORT environment variable
-    var port = process.env.PORT || 8080;
-    
-    // Grab the blacklist from the command-line so that we can update the blacklist without deploying
-    // again. CORS Anywhere is open by design, and this blacklist is not used, except for countering
-    // immediate abuse (e.g. denial of service). If you want to block all origins except for some,
-    // use originWhitelist instead.
-    var originBlacklist = parseEnvList(process.env.CORSANYWHERE_BLACKLIST);
-    var originWhitelist = parseEnvList(process.env.CORSANYWHERE_WHITELIST);
-    function parseEnvList(env) {
-      if (!env) {
-        return [];
-      }
-      return env.split(',');
-    }
 
-    // Set up rate-limiting to avoid abuse of the public CORS Anywhere server.
-    var checkRateLimit = require('./lib/rate-limit')(process.env.CORSANYWHERE_RATELIMIT);
-
-    var cors_proxy = require('./lib/cors-anywhere');
-    cors_proxy.createServer({
-      originBlacklist: originBlacklist,
-      originWhitelist: originWhitelist,
-      requireHeader: ['origin', 'x-requested-with'],
-      checkRateLimit: checkRateLimit,
-      removeHeaders: [
-        'cookie',
-        'cookie2',
+    // Configuração do servidor CORS Anywhere
+    const cors_proxy = require('./lib/cors-anywhere');
+    const server = cors_proxy.createServer({
+        originBlacklist: [],
+        originWhitelist: [],
+        requireHeader: ['origin', 'x-requested-with'],
+        checkRateLimit: true,
+        removeHeaders: [
+            'cookie',
+            'cookie2',
         'origin',
         'referer',
         // Strip Heroku-specific headers
@@ -54,21 +36,31 @@ const XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
         'via',
         'connect-time',
         'total-route-time',
-        // Other Heroku added debug headers
-        // 'x-forwarded-for',
-        // 'x-forwarded-proto',
-        // 'x-forwarded-port',
-      ],
-      redirectSameOrigin: true,
-      httpProxyOptions: {
-        // Do not add X-Forwarded-For, etc. headers, because Heroku already adds it.
-        xfwd: false,
-      },
-  setHeaders: {
-    'Access-Control-Allow-Origin': 'https://playervipmaster.com', // Domínio permitido
-    // Adicione outros cabeçalhos necessários aqui
-  }
-    }).listen(port, host, function() {
-      console.log('Running CORS Anywhere on ' + host + ':' + port);
+        ],
+        redirectSameOrigin: true,
+        httpProxyOptions: {
+            xfwd: false,
+        },
     });
+
+    // Middleware para configurar o cabeçalho Access-Control-Allow-Origin
+    app.use((req, res, next) => {
+        res.setHeader('Access-Control-Allow-Origin', 'https://playervipmaster.com'); // Substitua pela URL do seu frontend
+        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+        next();
+    });
+
+    // Porta que o servidor Express vai escutar
+    const port = process.env.PORT || 8080;
+
+    // Inicia o servidor Express e o servidor CORS Anywhere
+    app.listen(port, () => {
+        console.log(`Servidor Node.js está rodando na porta ${port}`);
+    });
+
+    server.listen(port, () => {
+        console.log('Running CORS Anywhere on port ' + port);
+    });
+
 })();
