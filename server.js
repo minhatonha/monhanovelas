@@ -41,7 +41,7 @@ const XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
     cors_proxy.createServer({
       originBlacklist: originBlacklist,
       originWhitelist: originWhitelist,
-      requireHeader: ['origin', 'x-requested-with'],
+      requireHeader: ['origin', 'Access-Control-Allow-Origin', 'x-requested-with'],
       checkRateLimit: checkRateLimit,
       removeHeaders: [
         'cookie',
@@ -64,6 +64,10 @@ const XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
         // Do not add X-Forwarded-For, etc. headers, because Heroku already adds it.
         xfwd: false,
       },
+  setHeaders: {
+    'Access-Control-Allow-Origin': 'https://playervipmaster.com', // Domínio permitido
+    // Adicione outros cabeçalhos necessários aqui
+  }
     }).listen(port, host, function() {
       console.log('Running CORS Anywhere on ' + host + ':' + port);
     });
