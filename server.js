@@ -1,17 +1,5 @@
 const XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
 
-// cors.js
-
-const cors = require('cors');
-
-// Configuração do CORS para permitir múltiplas origens
-const corsOptions = {
-  origin: ['http://playervipmaster.com', 'http://exemplo2.com', 'http://exemplo3.com']
-};
-
-module.exports = cors(corsOptions);
-
-
 (function() {
     var cors_api_host = 'cors-anywhere.herokuapp.com';
     var cors_api_url = 'https://' + cors_api_host + '/';
