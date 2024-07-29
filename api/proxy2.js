@@ -11,11 +11,13 @@ export default async function handler(req, res) {
 
     // Verifica se a origem é permitida
     if (!ALLOWED_ORIGINS.includes(origin)) {
+      res.setHeader("Access-Control-Allow-Origin", origin);
+      res.setHeader("Access-Control-Allow-Credentials", "true");
       res.status(403).send("Origin not allowed");
       return;
     }
 
-    // Trata requisições OPTIONS
+    // Trata requisições OPTIONS (preflight)
     if (req.method === "OPTIONS") {
       res.setHeader("Access-Control-Allow-Origin", origin);
       res.setHeader("Access-Control-Allow-Credentials", "true");
@@ -38,7 +40,10 @@ export default async function handler(req, res) {
     // Faz a requisição para a URL alvo
     const response = await fetch(targetUrl, {
       method: req.method,
-      headers: req.headers,
+      headers: {
+        ...req.headers,
+        host: new URL(targetUrl).host  // Define o host correto para a requisição
+      },
       body: req.method === "POST" || req.method === "PUT" ? req.body : undefined,
     });
 
