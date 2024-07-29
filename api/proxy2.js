@@ -27,7 +27,7 @@ export default async function handler(req, res) {
 
     // Extrai a URL da requisição
     const { pathname } = new URL(req.url, `https://${req.headers.host}`);
-    const targetUrl = decodeURIComponent(pathname.slice('/api/proxy/'.length));
+    const targetUrl = decodeURIComponent(pathname.slice('/api/proxy2/'.length));
 
     // Verifica se a URL é válida
     if (!targetUrl || !/^https?:\/\//.test(targetUrl)) {
