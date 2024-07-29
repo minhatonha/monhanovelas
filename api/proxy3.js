@@ -1,41 +1,58 @@
-const axios = require("axios");
-const micro = require("micro");
-const microCors = require("micro-cors");
-const { parse } = require("url");
-const cors = microCors();
+import express from "express";
+import axios from "axios";
+import bodyParser from "body-parser";
 
-const handler = async (req, res) => {
-  const { query } = parse(req.url, true);
-  const { url: encodedUrl } = query;
+const app = express();
+const port = 3000;
 
-  if (!encodedUrl) {
-    return micro.send(res, 400, { error: "Missing URL parameter" });
-  }
+app.use(bodyParser.json());
 
-  const url = decodeURIComponent(encodedUrl);
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header(
+        "Access-Control-Allow-Methods",
+        "GET, POST, PUT, DELETE, OPTIONS"
+    );
+    res.header(
+        "Access-Control-Allow-Headers",
+        "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+    );
+    next();
+});
 
-  if (!url) {
-    return micro.send(res, 400, { error: "Missing URL parameter" });
-  }
+app.post("/api/proxy", async (req, res) => {
+    console.log("Received request:", req.body);
 
-  try {
-    const response = await axios.get(url, {
-      headers: {
-        "x-requested-with": "XMLHttpRequest",
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.71 Safari/537.36",
-      },
-    });
+    const { method, url, headers, data } = req.body;
 
-    res.setHeader("Content-Type", "text/html; charset=utf-8");
-    micro.send(res, response.status, response.data);
-  } catch (error) {
-    console.error("Error fetching URL:", error.message, error.config);
-    micro.send(res, 500, {
-      error: "Failed to fetch the requested URL",
-      errorMessage: error.message,
-    });
-  }
-};
+    try {
+        const response = await axios({
+            method: method,
+            url: url,
+            headers: headers,
+            data: data
+        });
 
-module.exports = cors(handler);
+        console.log("Response from target API:", response.data);
+        res.json(response.data);
+    } catch (error: any) {
+        console.error(
+            "Error occurred:",
+            error.response?.status,
+            error.response?.data
+        );
+        res.status(error.response?.status || 500).json({
+            message: error.message
+        });
+    }
+});
+
+app.get("/", (req, res) => {
+    res.send(
+        "CORS proxy server by Aurélio Fernam. Visit https://github.com/fariosofernando"
+    );
+});
+
+app.listen(port, () => {
+    console.log(`CORS proxy server running at http://localhost:${port}`);
+});
