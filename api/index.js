@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   try {
     const origin = req.headers.origin;
 
-    // Verifica se a origem é permitida
+    // Configura CORS
     if (origin && ALLOWED_ORIGINS.includes(origin)) {
       res.setHeader("Access-Control-Allow-Origin", origin);
       res.setHeader("Access-Control-Allow-Credentials", "true");
@@ -26,9 +26,8 @@ export default async function handler(req, res) {
       return;
     }
 
-    // Extrai a URL alvo do caminho
-    const { pathname } = new URL(req.url, `https://${req.headers.host}`);
-    const targetUrl = decodeURIComponent(pathname.slice('/api/proxy2/'.length));
+    // Extrai a URL alvo do caminho da requisição
+    const targetUrl = decodeURIComponent(req.query.url);
 
     // Verifica se a URL é válida
     if (!targetUrl || !/^https?:\/\//.test(targetUrl)) {
